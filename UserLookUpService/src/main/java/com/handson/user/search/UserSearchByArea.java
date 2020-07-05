@@ -35,7 +35,7 @@ public class UserSearchByArea {
 
 	@Autowired
 	private DistanceCalculator<Coordinate> distanceCalculator;
-	
+
 	@Autowired
 	private RestTemplate userRestServiceTemplate;// = new RestTemplate();
 
@@ -44,7 +44,7 @@ public class UserSearchByArea {
 	public List<User> search(String city, String distance) {
 		location = findLocation(city).orElseThrow(() -> new CityLocationNotFoundException(city));
 		Double searchDistance = Double.valueOf(distance);
-		return Arrays.asList(userRestServiceTemplate.getForObject(usersUrl, User[].class)).parallelStream()
+		return Arrays.asList(userRestServiceTemplate.getForObject(usersUrl, User[].class)).stream()
 				.filter(user -> (findDistance(user) <= searchDistance)).collect(Collectors.toList());
 	}
 

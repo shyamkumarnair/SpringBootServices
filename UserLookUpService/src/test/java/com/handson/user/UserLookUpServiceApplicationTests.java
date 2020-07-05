@@ -29,7 +29,7 @@ class UserLookUpServiceApplicationTests {
 	@Autowired
 	MockMvc mockMvc;
 
-	private Fixture fixture = new Fixture();;
+	private Fixture fixture = new Fixture();
 
 	@Test
 	void testGetUsers_validInput() {

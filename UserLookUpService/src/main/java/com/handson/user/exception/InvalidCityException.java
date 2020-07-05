@@ -8,6 +8,10 @@ public class InvalidCityException extends RuntimeException {
 	private static final long serialVersionUID = 6477967414309515764L;
 
 	public InvalidCityException(String city) {
-		super(String.format("Invalid city [%s] value. Please check your values again ", city));
+		super(String.format("Invalid city [%s] value. Please check your value again ", city));
+	}
+	
+	public InvalidCityException() {
+		super(String.format("Empty city value provided. City is required for search" ));
 	}
 }

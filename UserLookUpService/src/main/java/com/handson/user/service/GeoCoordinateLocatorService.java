@@ -5,12 +5,16 @@ import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import com.handson.user.exception.CityLocationNotFoundException;
+import com.handson.user.exception.InvalidCityException;
 import com.handson.user.json.GeocodeResponse;
 import com.handson.user.json.Location;
+import com.handson.user.json.Result;
 
 /**
  * Helps to find the geo-coordinates (latitude and longitude) of a city
@@ -34,12 +38,14 @@ public class GeoCoordinateLocatorService {
 	@Value("${geolocation.finder.default.city}")
 	private String defaultCity;
 
-	private RestTemplate geoLocationService = new RestTemplate();
+	@Autowired
+	private RestTemplate geoLocationService;
 
 	private static final Logger log = LoggerFactory.getLogger(GeoCoordinateLocatorService.class);
 
-	// Require Hystrix
+	// configure Hystrix for fault tolerance
 	public Optional<Location> getLocaton(Optional<String> city) {
+
 		Optional<String> key = Optional.empty();
 		log.info("getLocation invoked- city [{}] and key [{}]", city.orElse(defaultCity),
 				key.isPresent() ? "key" : "defaultkey");
@@ -48,11 +54,18 @@ public class GeoCoordinateLocatorService {
 			return Optional.of(new Location(LONDON_LAT, LONDON_LON));
 		}
 
-		Optional<Location> location = Arrays
-				.asList(geoLocationService.getForObject(findGeoLocationUrl, GeocodeResponse.class,
-						city.orElse(defaultCity), key.orElse(defaultKey)).getResults())
-				.stream().map(result -> result.getGeometry().getLocation()).findFirst();
+		Result[] results = geoLocationService.getForObject(findGeoLocationUrl, GeocodeResponse.class,
+				city.orElseThrow(() -> new InvalidCityException()), key.orElse(defaultKey)).getResults();
+
+		if (results.length <= 0) {
+			throw new CityLocationNotFoundException(city.get());
+		}
+
+		Optional<Location> location = Arrays.asList(results).stream().map(result -> result.getGeometry().getLocation())
+				.findFirst();
+
 		log.info("getLocation call to find co-ordinates : [{}]", location.isPresent() ? location.get() : "failed");
+
 		return location;
 	}
 

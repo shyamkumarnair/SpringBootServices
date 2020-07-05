@@ -1,10 +1,13 @@
 package com.handson.user.service;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -13,6 +16,7 @@ import com.handson.user.dao.UserSearchDao;
 import com.handson.user.exception.DistanceFormatException;
 import com.handson.user.exception.InvalidCityException;
 import com.handson.user.json.Response;
+import com.handson.user.json.User;
 
 @Service
 public class FindUserService {
@@ -21,6 +25,8 @@ public class FindUserService {
 
 	@Autowired
 	private UserSearchDao userSearchDao;
+
+	private static final Logger log = LoggerFactory.getLogger(FindUserService.class);
 
 	public Response getUsers(String city, String distance) {
 		Response response = new Response();
@@ -32,11 +38,21 @@ public class FindUserService {
 		}
 		response.setStatus(HttpStatus.OK.name());
 		response.setMessage("success");
-		response.setUsers(Stream
-				.concat(userSearchDao.searchByCity(city).parallelStream(),
-						userSearchDao.searchByCityArea(city, distance).parallelStream())
-				.parallel().distinct().map(user -> userSearchDao.searchById(String.valueOf(user.getId())))
-				.collect(Collectors.toList()));
+		try {
+			List<User> usersResultList = Stream
+					.concat(userSearchDao.searchByCity(city).stream(),
+							userSearchDao.searchByCityArea(city, distance).stream())
+					.distinct().map(user -> userSearchDao.searchById(String.valueOf(user.getId())))
+					.collect(Collectors.toList());
+			log.info("size list - " + usersResultList.size());
+			response.setUsers(usersResultList);
+		} catch (Exception e) {
+			log.info(String.format("Error happend while searching with city [ %s] and distance [%s] ", city, distance));
+			log.error("Error happened ", e);
+			response.setMessage(
+					"Search failed ! Please check the parameters provided. Example /users/city/<CityNameHere>/distance/<Distance here>/ ");
+			response.setStatus(HttpStatus.BAD_REQUEST.getReasonPhrase());
+		}
 		return response;
 	}
 

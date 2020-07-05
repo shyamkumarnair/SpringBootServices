@@ -24,7 +24,7 @@ public class UserSearchByCity {
 	private String userByCityUrl;
 
 	@Autowired
-	private RestTemplate userRestServiceTemplate;// = new RestTemplate();
+	private RestTemplate userRestServiceTemplate;
 
 	public List<User> search(String city) {
 		return Arrays.asList(userRestServiceTemplate.getForObject(userByCityUrl, User[].class, city));

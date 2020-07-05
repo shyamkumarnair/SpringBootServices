@@ -12,8 +12,12 @@ import com.handson.user.UserLookUpServiceApplication;
 import com.handson.user.json.Response;
 import com.handson.user.service.FindUserService;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+
 @RestController
 @RequestMapping("/users")
+@Api(value = "User Lookup Service")
 public class FindUserController {
 
 	@Autowired
@@ -22,20 +26,23 @@ public class FindUserController {
 	private static final Logger log = LoggerFactory.getLogger(UserLookUpServiceApplication.class);
 
 	@GetMapping("/city/{city}/distance/{distance}")
+	@ApiOperation(value = "getUsers - return users based on their city and within a distance")
 	public Response getUsers(@PathVariable String city, @PathVariable String distance) {
-		log.debug("getUser request received, city [%s] , distance [%s] ", city, distance);
+		log.info("getUser request received, city [%s] , distance [%s] ", city, distance);
 		return service.getUsers(city, distance);
 	}
 
 	@GetMapping("/city/{city}")
+	@ApiOperation(value = "getUsers- return users based on their city")
 	public Response getUsers(@PathVariable String city) {
-		log.debug("getUser request received, city [%s] ", city);
+		log.info("getUser request received, city [%s] ", city);
 		return service.getUsers(city, "0.0");
 	}
 
 	@GetMapping("/london")
+	@ApiOperation(value = "getLondonUsers - returns people who are listed as either living in London, or whose current coordinates are within 50 miles of London")
 	public Response getLondonUsers() {
-		log.debug("getLondonUsers request received");
+		log.info("getLondonUsers request received");
 		return service.getUsers("London", "50");
 	}
 

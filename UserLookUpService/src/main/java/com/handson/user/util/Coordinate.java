@@ -47,6 +47,10 @@ public class Coordinate {
 		return result;
 	}
 
+	boolean isValid() {
+		return this.latitude != null && this.longitude != null;
+	}
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj)
