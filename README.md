@@ -16,6 +16,7 @@ Swagger Documentation:
 Once deploed, the swagger documentation would be available on based on the port and server details.
 
 Swagger URL : http://<Server IP/DNS Name>:<port>/swagger-ui.html
+   
 Default URL : http://localhost:8070/swagger-ui.html
 
 
@@ -24,6 +25,7 @@ API Docs:
 Api docs would be available on based on the port and server details.
 
 API Url     : http://<Server IP/DNS Name>:<port>/v2/api-docs
+   
 Default URL : http://localhost:8070/v2/api-docs
 
 
@@ -62,10 +64,13 @@ Services:
 
    The following are the parameters to this service
       
-      1. City example: London
-      2. Distance : This can be any valid double value (no alphabets or no special characters other than '.') example : 50, 50.00, 2343.13232
+      1. City:     example: London
       
+      2. Distance :  This can be any valid double value (no alphabets or no special characters other than '.') example : 50, 50.00, 2343.13232
+      
+   
    URL : http://localhost:8070/users/city/{city}/distance/{distance}
+   
    
    Response format :
            {
@@ -88,9 +93,13 @@ Services:
      
 3. Find users living in a city. The following are the parameters to this service
      
-     1. City example: LondonThis is a no parameter service.
-      
+     1. City 
+     
+     example: London
+
+
    URL : http://localhost:8070/users/city/London
+   
    
    Response format :
            {
