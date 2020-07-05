@@ -21,6 +21,10 @@ import com.handson.user.json.Location;
 @Service
 public class GeoCoordinateLocatorService {
 
+	private static final double LONDON_LON = -0.1277583;
+
+	private static final double LONDON_LAT = 51.5073509;
+
 	@Value("${geolocation.finder.url}")
 	private String findGeoLocationUrl;
 
@@ -35,14 +39,20 @@ public class GeoCoordinateLocatorService {
 	private static final Logger log = LoggerFactory.getLogger(GeoCoordinateLocatorService.class);
 
 	// Require Hystrix
-	public Optional<Location> getLocaton(Optional<String> city, Optional<String> key) {
+	public Optional<Location> getLocaton(Optional<String> city) {
+		Optional<String> key = Optional.empty();
 		log.info("getLocation invoked- city [{}] and key [{}]", city.orElse(defaultCity),
 				key.isPresent() ? "key" : "defaultkey");
+
+		if ("London".equalsIgnoreCase(city.orElse(""))) {
+			return Optional.of(new Location(LONDON_LAT, LONDON_LON));
+		}
+
 		Optional<Location> location = Arrays
 				.asList(geoLocationService.getForObject(findGeoLocationUrl, GeocodeResponse.class,
 						city.orElse(defaultCity), key.orElse(defaultKey)).getResults())
 				.stream().map(result -> result.getGeometry().getLocation()).findFirst();
-		log.debug("getLocation call to find co-ordinates : [{}]", location.isPresent() ? location.get() : "failed");
+		log.info("getLocation call to find co-ordinates : [{}]", location.isPresent() ? location.get() : "failed");
 		return location;
 	}
 

@@ -1,77 +1,58 @@
 package com.handson.user.service;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-import java.util.function.BiPredicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
-import com.handson.user.json.Location;
-import com.handson.user.json.User;
-import com.handson.user.util.Coordinate;
-import com.handson.user.util.DistanceCalculator;
+import com.handson.user.dao.UserSearchDao;
+import com.handson.user.exception.DistanceFormatException;
+import com.handson.user.exception.InvalidCityException;
+import com.handson.user.json.Response;
 
 @Service
 public class FindUserService {
 
-	private RestTemplate userRestServiceTemplate = new RestTemplate();
+	private static final String DECIMAL_FORMAT_REGEX = "^[0-9]\\d*(\\.\\d+)?$";
 
 	@Autowired
-	private GeoCoordinateLocatorService coordinateService;
+	private UserSearchDao userSearchDao;
 
-	@Autowired
-	private DistanceCalculator<Coordinate> distanceCalculator;
-	
-	@Value("${source.users.url}")
-	private String usersUrl;
-	
-	@Value("${source.users.byid.url}")
-	private String userByIdUrl;
-	
-	@Value("${source.users.bycity.url}")
-	private String userByCityUrl;
-
-	/*
-	 * @Autowired public FindUserService(RestTemplateBuilder builder) {
-	 * userRestServiceTemplate = builder.build(); }
-	 */
-	// @HystrixCommand(fallbackMethod = "getFallbackUser")
-	public List<User> getUsers(String city, String distance) {
-
-		Double searchDistance = Double.valueOf(distance);
-		BiPredicate<User, Location> biPred = (user, location) -> findDistance(user, location) <= searchDistance;
-		Optional<Location> location = findLocation(city);
-		List<User> users = Stream.concat(
-				Arrays.asList(userRestServiceTemplate.getForObject(userByCityUrl, User[].class, city)).parallelStream(),
-				Arrays.asList(userRestServiceTemplate.getForObject(usersUrl, User[].class)).parallelStream()
-						.filter(user -> biPred.test(user, location.get())))
-				.parallel().distinct()
-				.map(user -> userRestServiceTemplate.getForObject(userByIdUrl, User.class, user.getId()))
-				.collect(Collectors.toList());
-
-		return users;
+	public Response getUsers(String city, String distance) {
+		Response response = new Response();
+		distance = StringUtils.isBlank(distance) ? "0.0" : distance;
+		RuntimeException ex = validateParameters(city, distance);
+		if (ex != null) {
+			populateError(response, ex);
+			return response;
+		}
+		response.setStatus(HttpStatus.OK.name());
+		response.setMessage("success");
+		response.setUsers(Stream
+				.concat(userSearchDao.searchByCity(city).parallelStream(),
+						userSearchDao.searchByCityArea(city, distance).parallelStream())
+				.parallel().distinct().map(user -> userSearchDao.searchById(String.valueOf(user.getId())))
+				.collect(Collectors.toList()));
+		return response;
 	}
 
-	private Optional<Location> findLocation(String city) {
-		return coordinateService.getLocaton(Optional.of(city), Optional.empty());
+	private void populateError(Response response, RuntimeException ex) {
+		response.setMessage(ex.getLocalizedMessage());
+		response.setStatus(HttpStatus.BAD_REQUEST.getReasonPhrase());
+		response.setUsers(Arrays.asList());
 	}
 
-	public Double findDistance(User user, Location location) {
-		return distanceCalculator.findDistance(new Coordinate(location.getLat(), location.getLng()),
-				new Coordinate(user.getLatitude(), user.getLongitude()));
+	private RuntimeException validateParameters(String city, String distance) {
+		if (!distance.matches(DECIMAL_FORMAT_REGEX)) {
+			return new DistanceFormatException(distance);
+		}
+		if (StringUtils.isBlank(city)) {
+			return new InvalidCityException(city);
+		}
+		return null;
 	}
-
-	public List<User> getFallbackUsers() {
-		// Read from cache and populate
-		return new ArrayList<User>();
-	}
-
-
 }
