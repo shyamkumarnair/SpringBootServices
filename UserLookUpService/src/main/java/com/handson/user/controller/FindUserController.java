@@ -17,7 +17,7 @@ import io.swagger.annotations.ApiOperation;
 
 @RestController
 @RequestMapping("/users")
-@Api(value = "User Lookup Service")
+@Api(value = "User Lookup API")
 public class FindUserController {
 
 	@Autowired
@@ -26,23 +26,23 @@ public class FindUserController {
 	private static final Logger log = LoggerFactory.getLogger(UserLookUpServiceApplication.class);
 
 	@GetMapping("/city/{city}/distance/{distance}")
-	@ApiOperation(value = "getUsers - return users based on their city and within a distance")
+	@ApiOperation(value = "getUsers - return user details based on city and within distance provided")
 	public Response getUsers(@PathVariable String city, @PathVariable String distance) {
-		log.info("getUser request received, city [%s] , distance [%s] ", city, distance);
+		log.info(String.format("getUser request received, city [%s] , distance [%s] ", city, distance));
 		return service.getUsers(city, distance);
 	}
 
 	@GetMapping("/city/{city}")
-	@ApiOperation(value = "getUsers- return users based on their city")
+	@ApiOperation(value = "getUsers- return user details based on city parameter")
 	public Response getUsers(@PathVariable String city) {
-		log.info("getUser request received, city [%s] ", city);
+		log.info(String.format("getUser request received, city [%s] ", city));
 		return service.getUsers(city, "0.0");
 	}
 
 	@GetMapping("/london")
-	@ApiOperation(value = "getLondonUsers - returns people who are listed as either living in London, or whose current coordinates are within 50 miles of London")
+	@ApiOperation(value = "getLondonUsers - returns user details, who are living in London, or whose current coordinates are within 50 miles of London")
 	public Response getLondonUsers() {
-		log.info("getLondonUsers request received");
+		log.info(String.format("getLondonUsers request received"));
 		return service.getUsers("London", "50");
 	}
 

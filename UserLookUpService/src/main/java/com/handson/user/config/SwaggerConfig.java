@@ -26,7 +26,7 @@ public class SwaggerConfig {
 	}
 
 	private ApiInfo createMetaInfo() {
-		return new ApiInfo("User Look-up Service", "This is a user look up service", "1.0", "Terms of Service",
+		return new ApiInfo("User Look-up API ", "This is a user look up service", "1.0", "Terms of Service",
 				new Contact("Contact", "ContactMeUrl", "contactme@email.com"), "License", "https://www.mylicence.html",
 				Arrays.asList());
 	}
